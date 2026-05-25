@@ -1,0 +1,34 @@
+Package: winIPCW
+Title: Restricted Win Statistics with Conditional Tie Weighting
+Version: 0.0.1
+Authors@R: c(
+    person("Xi", "Fang", role = c("aut", "cre"), email = "xi.fang@example.com"),
+    person("Fan", "Li", role = "aut")
+  )
+Description: Estimates restricted-time win statistics for hierarchical or
+    prioritized composite survival outcomes under right censoring. The package
+    targets restricted win probabilities at a prespecified clinical horizon and
+    implements both the verified-tie inverse probability of censoring weighting
+    (IPCW) estimator and a modified IPCW estimator with conditional tie
+    weighting. The modified estimator uses conditional probabilities of
+    higher-priority genuine ties to recover partially observed lower-priority
+    comparisons that would otherwise be discarded as censoring-induced ties.
+    Summary measures include the win ratio, net benefit, and win odds, with
+    Wald-type confidence intervals based on two-sample U-statistic projection
+    variance estimators.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+Depends:
+    R (>= 4.1.0)
+Imports:
+    survival,
+    stats,
+    utils
+Suggests:
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+NeedsCompilation: yes
+Config/roxygen2/version: 8.0.0
+RoxygenNote: 7.3.3

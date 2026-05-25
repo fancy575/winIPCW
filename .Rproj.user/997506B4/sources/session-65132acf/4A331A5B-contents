@@ -1,0 +1,56 @@
+#' Example data for restricted win statistics
+#'
+#' A simulated two-component prioritized survival data set for illustrating
+#' restricted win statistics with right censoring. The data are stored in
+#' long format. Each subject has one follow-up/censoring row with
+#' `event_type = 0`; subjects with observed component events before the
+#' restriction time have additional event rows with `event_type = 1` or
+#' `event_type = 2`.
+#'
+#' @format A data frame with columns:
+#' \describe{
+#'   \item{id}{Subject identifier.}
+#'   \item{A}{Treatment arm indicator; `1` for treatment and `0` for control.}
+#'   \item{Z1}{Binary baseline covariate.}
+#'   \item{Z2}{Continuous baseline covariate.}
+#'   \item{Z3}{Binary baseline covariate.}
+#'   \item{event_type}{Endpoint type. `0` is the follow-up/censoring row,
+#'     `1` is the first-priority endpoint, and `2` is the second-priority endpoint.}
+#'   \item{priority}{Endpoint priority order; `0` for the follow-up/censoring row.}
+#'   \item{label}{Text label for the endpoint type.}
+#'   \item{time}{Observed row-specific time used in `Surv(time, status)`.}
+#'   \item{status}{Row-specific event indicator. For event rows, `1` indicates
+#'     that the endpoint event was observed. For the follow-up row, `1` indicates
+#'     censoring before the restriction time.}
+#'   \item{tau}{Restriction time used to construct the observed data.}
+#' }
+#'
+#' @details
+#' The data were simulated from Weibull proportional hazards margins linked by
+#' a Gumbel--Hougaard dependence structure, with covariate-dependent censoring.
+#' The object is intended only as a reproducible example for the package API.
+#'
+#' @source Simulated using `data-raw/windat.R` from the package source tree.
+#'
+#' @examples
+#' data(windat)
+#' head(windat)
+#'
+#' \dontrun{
+#' fit <- winIPCW(
+#'   survival::Surv(time, status) ~ Z1 + Z2 + Z3,
+#'   data = windat,
+#'   id = "id",
+#'   trt = "A",
+#'   endpoint = "event_type",
+#'   tau = c(12, 24, 36),
+#'   method = c("ipcw", "m-ipcw"),
+#'   estimand = c("NB", "WR", "WO"),
+#'   priority = c(1, 2),
+#'   censor = "cox",
+#'   margin = "cox",
+#'   copula = "gumbel"
+#' )
+#' summary(fit)
+#' }
+"windat"

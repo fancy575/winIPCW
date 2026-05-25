@@ -1,0 +1,86 @@
+## Local full-data test for winIPCW using windat
+## Save as, for example: tests/manual/test-full-windat.R
+## Or run directly from the package root after installation.
+
+library(winIPCW)
+library(survival)
+
+data("windat", package = "winIPCW")
+
+## Basic data checks
+required_cols <- c(
+  "id", "A", "Z1", "Z2", "Z3",
+  "event_type", "time", "status"
+)
+
+stopifnot(
+  is.data.frame(windat),
+  all(required_cols %in% names(windat)),
+  all(windat$A %in% c(0, 1)),
+  all(windat$event_type %in% c(0, 1, 2)),
+  any(windat$event_type == 0),
+  any(windat$event_type == 1),
+  any(windat$event_type == 2)
+)
+
+## Confirm both arms are represented in the follow-up rows
+follow <- windat[windat$event_type == 0, ]
+
+stopifnot(
+  length(unique(follow$id)) > 0,
+  sum(follow$A == 1) > 1,
+  sum(follow$A == 0) > 1
+)
+
+cat("Number of subjects:", length(unique(follow$id)), "\n")
+cat("Treatment subjects:", sum(follow$A == 1), "\n")
+cat("Control subjects:  ", sum(follow$A == 0), "\n\n")
+
+## Full-data fit.
+## This is intentionally only one tau and one copula so it is still a quick
+## full-data smoke test. Add tau = c(12, 24, 36) later for a longer test.
+fit_full <- winIPCW(
+  survival::Surv(time, status) ~ Z1 + Z2 + Z3,
+  data = windat,
+  id = "id",
+  trt = "A",
+  endpoint = "event_type",
+  tau = 36,
+  method = c("ipcw", "m-ipcw"),
+  estimand = c("NB", "WR", "WO"),
+  priority = c(1, 2),
+  censor = "cox",
+  margin = "cox",
+  copula = "gumbel",
+  eps = 0.01,
+  conf.level = 0.95
+)
+
+print(fit_full)
+out <- results(fit_full)
+print(out)
+
+## Output checks: no NA or non-finite estimates / confidence intervals
+check_cols <- c("estimate", "se", "lower", "upper", "pi_t", "pi_c")
+
+stopifnot(
+  is.data.frame(out),
+  nrow(out) == 6L,   # 2 methods x 3 estimands x 1 tau
+  all(c("tau", "method", "copula", "estimand", check_cols) %in% names(out)),
+  !anyNA(out[check_cols]),
+  all(is.finite(unlist(out[check_cols]))),
+  all(out$estimand %in% c("NB", "WR", "WO")),
+  all(out$method %in% c("ipcw", "m-ipcw")),
+  all(out$tau == 36)
+)
+
+## Extra sanity checks for intervals
+stopifnot(
+  all(out$lower <= out$estimate),
+  all(out$estimate <= out$upper),
+  all(out[out$estimand %in% c("WR", "WO"), "estimate"] > 0),
+  all(out[out$estimand %in% c("WR", "WO"), "lower"] > 0),
+  all(out[out$estimand %in% c("WR", "WO"), "upper"] > 0)
+)
+
+cat("\nFull windat smoke test passed: no NA estimates, SEs, or CI limits.\n")
